@@ -56,7 +56,16 @@ void AT_OVL emu_start () {
     KBD_PRINT(("Initial state: CodeAndFlags: %Xh Key: %Xh LastKey: %Xh CPU_State.Flags: %Xh",
                                g_conf.CodeAndFlags, g_conf.Key, g_conf.LastKey, Device_Data.CPU_State.Flags));
     // Запускаем эмуляцию
+    // Настраиваем SysTick: тактирование от системной частоты
+    // и максимальное значение 24-битного счётчика
+    systick_hw->rvr = 0xFFFFFF;  // reload value (24 бита макс)
+    systick_hw->cvr = 0;         // current value
+    systick_hw->csr = (1 << 0) | (1 << 2);  // ENABLE = бит 0, CLKSOURCE = бит 2
     while (1) {
+        // SysTick запущен до manager(), чтобы время USB/клавиатуры учитывалось
+        // в бюджете реального времени итерации. Иначе при частом нажатии клавиш
+        // tuh_task() добавляет неучтённую задержку и эмуляция замедляется.
+        uint32_t startTicks = systick_hw->cvr;
         manager(false);
         uint32_t armFreqDivEmu = clock_get_hz(clk_sys) / g_conf.cpu_freq;
 #if LOAD_WAV_PIO
@@ -79,15 +88,9 @@ void AT_OVL emu_start () {
             g_conf.T    = Device_Data.CPU_State.Time;
         }
         else {
-            // Настраиваем SysTick: тактирование от системной частоты
-            // и максимальное значение 24-битного счётчика
-            systick_hw->rvr = 0xFFFFFF;  // reload value (24 бита макс)
-            systick_hw->cvr = 0;         // current value
-            systick_hw->csr = (1 << 0) | (1 << 2);  // ENABLE = бит 0, CLKSOURCE = бит 2
-            uint32_t startTicks = systick_hw->cvr;
             CPU_RunInstruction ();
             uint32_t dT = Device_Data.CPU_State.Time - g_conf.T; // BM1 emulated ticks passed
-            // Считаем прошедшие такты ARM
+            // Считаем прошедшие такты ARM (включая время manager/keyboard)
             uint32_t cvr_now = systick_hw->cvr;
             uint32_t dTicks = startTicks >= cvr_now ? startTicks - cvr_now : startTicks + (0xFFFFFF - cvr_now) + 1; // ARM Cortex ticks passed
             if (dT < 0x7FFFFFFF && dT > 0 && dTicks > 0) { // W/A for overload
