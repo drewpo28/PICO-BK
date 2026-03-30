@@ -399,13 +399,21 @@ static void in_conf(int x, int y) {
         draw_label(x, y+11,31, "   manager 128x48:   (VGA only)", false, z_idx == 10);
     }
     if (dvi_mode_new == 0) {
+#if PICO_RP2350
+        draw_label(x, y+12,36, "     HDMI 720x576:   (270 MHz 1.3V)", false, z_idx == 11);
+#else
         draw_label(x, y+12,30, "     HDMI 720x576:   (270 MHz)", false, z_idx == 11);
+#endif
 #if PICO_RP2350
     } else if(dvi_mode_new == 2) {
-        draw_label(x, y+12,30, "    HDMI 1024x768:   (512 MHz)", false, z_idx == 11);
+        draw_label(x, y+12,36, "    HDMI 1024x768:   (512 MHz 1.6V)", false, z_idx == 11);
 #endif
     } else {
+#if PICO_RP2350
+        draw_label(x, y+12,36, "     HDMI 800x600:   (400 MHz 1.5V)", false, z_idx == 11);
+#else
         draw_label(x, y+12,30, "     HDMI 800x600:   (400 MHz)", false, z_idx == 11);
+#endif
     }
     draw_label(x, y+13,18, "     use 8x8 font:", false, z_idx == 12);
     if(already_swapped_fdds) { // TODO: save it?

@@ -12,7 +12,7 @@ if (EXISTS ${picoVscode})
     include(${picoVscode})
 endif()
 # ====================================================================================
-set(PICO_BOARD pico CACHE STRING "Board type")
+set(PICO_BOARD pico2 CACHE STRING "Board type")
 
 cmake_minimum_required(VERSION 3.22)
 set(PICO_CXX_ENABLE_EXCEPTIONS 1)
@@ -23,14 +23,14 @@ option(PICO_PC "RP2040-PICO-PC" OFF)
 option(ZERO2 "RP2350-PiZero" OFF)
 option(ZERO "RP2040-PiZero" OFF)
 
-set(BUILD_VERSION "1.4.5")
+set(BUILD_VERSION "1.4.6")
 set(USE_NESPAD ON)
 
 #set(AY_TYPE HWAY)
 #set (m1p2launcher ON)
 
 # Platform (m1p2 by default)
-#set (MURM2 ON)
+set (MURM2 ON)
 #set (PICO_PC ON)
 #set (ZERO ON)
 #set (ZERO2 ON)

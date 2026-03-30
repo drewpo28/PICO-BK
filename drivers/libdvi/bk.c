@@ -7,6 +7,7 @@
 #include <hardware/clocks.h>
 #if !PICO_RP2040
     #include <hardware/structs/qmi.h>
+    #include <hardware/vreg.h>
 #endif
 #include <hardware/structs/bus_ctrl.h>
 
@@ -118,32 +119,16 @@ const static tmds_2bpp_tables_bk_1024_t tmds_2bpp_tables_1024_bk[16] = {
 
 struct dvi_inst dvi0;
 
-void __not_in_flash() flash_timings() {
-#if !PICO_RP2040
-	const int max_flash_freq = 66 * 1000000;
-	const int clock_hz = DVI_TIMING.bit_clk_khz * 1000;
-	int divisor = (clock_hz + max_flash_freq - 1) / max_flash_freq;
-	if (divisor == 1 && clock_hz > 100000000) {
-		divisor = 2;
-	}
-	int rxdelay = divisor;
-	if (clock_hz / divisor > 100000000) {
-		rxdelay += 1;
-	}
-	qmi_hw->m[0].timing = 0x60007000 |
-						rxdelay << QMI_M0_TIMING_RXDELAY_LSB |
-						divisor << QMI_M0_TIMING_CLKDIV_LSB;
-#endif
-    sleep_ms(100);
-	// Run system at TMDS bit clock
-	set_sys_clock_khz(DVI_TIMING.bit_clk_khz, true);
-//	set_sys_clock_khz(366000, true);
-	hw_set_bits(&bus_ctrl_hw->priority, BUSCTRL_BUS_PRIORITY_PROC1_BITS);
-}
-
 static void __not_in_flash() flash_timings2() {
     uint khz = dvi0.timing->bit_clk_khz;
 #if !PICO_RP2040
+    if (khz >= 400000) {
+        if (khz >= 500000) {
+            vreg_set_voltage(VREG_VOLTAGE_1_60);
+        } else {
+            vreg_set_voltage(VREG_VOLTAGE_1_50);
+        }
+    }
 	const uint max_flash_freq = 66 * 1000000;
 	const uint clock_hz = khz * 1000;
 	int divisor = (clock_hz + max_flash_freq - 1) / max_flash_freq;

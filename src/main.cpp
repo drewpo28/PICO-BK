@@ -65,7 +65,6 @@ void PWM_init_pin(uint8_t pinN, uint16_t max_lvl) {
     pwm_init(pwm_gpio_to_slice_num(pinN), &config, true);
 }
 
-#define VREG_VSEL VREG_VOLTAGE_1_60
 extern "C" semaphore_t vga_start_semaphore;
 extern "C" void dvi_on_core1();
 extern "C" void flash_timings();
@@ -410,11 +409,8 @@ static int testPins(uint32_t pin0, uint32_t pin1) {
 int main() {
 #if !PICO_RP2040
 	vreg_disable_voltage_limit();
-	vreg_set_voltage(VREG_VSEL);
-#else
-    vreg_set_voltage(VREG_VOLTAGE_1_30);
 #endif
-    flash_timings();
+    vreg_set_voltage(VREG_VOLTAGE_1_30);
 
     DBGM_PRINT(("Before keyboard_init"));
     keyboard_init();
