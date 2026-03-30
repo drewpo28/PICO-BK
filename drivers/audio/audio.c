@@ -84,7 +84,7 @@ void audio_init(void) {
 void __not_in_flash_func(audio_i2s_submit)(int16_t l, int16_t r) {
     g_i2s_samples[0] = r;   /* PIO word layout: bits[31:16] = WS=0 (right), bits[15:0] = WS=1 (left) */
     g_i2s_samples[1] = l;
-    i2s_dma_write(&g_i2s_config, g_i2s_samples);
+    i2s_write(&g_i2s_config, g_i2s_samples, 1);
 }
 #endif
 
@@ -188,9 +188,9 @@ void i2s_init(i2s_config_t *i2s_config) {
  *             one for the left channel and one for the right channel
  *        len: length of sample in 32 bits words
  */
-void i2s_write(const i2s_config_t *i2s_config,const int16_t *samples,const size_t len) {
+void __not_in_flash_func(i2s_write)(const i2s_config_t *i2s_config,const int16_t *samples,const size_t len) {
     for(size_t i=0;i<len;i++) {
-            pio_sm_put_blocking(i2s_config->pio, i2s_config->sm, (uint32_t)samples[i]);
+        pio_sm_put_blocking(i2s_config->pio, i2s_config->sm, (uint32_t)samples[i]);
     }
 }
 
