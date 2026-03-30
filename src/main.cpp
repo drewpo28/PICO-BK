@@ -54,7 +54,19 @@ uint8_t __aligned(4) TEXT_VIDEO_RAM[128*48*2] = { 0 };
 uint8_t __aligned(4) TEXT_VIDEO_RAM[128*96*2] = { 0 };
 #endif
 
+<<<<<<< HEAD
 #define VREG_VSEL VREG_VOLTAGE_1_60
+=======
+pwm_config config = pwm_get_default_config();
+
+void PWM_init_pin(uint8_t pinN, uint16_t max_lvl) {
+    gpio_set_function(pinN, GPIO_FUNC_PWM);
+    pwm_config_set_clkdiv(&config, 1.0);
+    pwm_config_set_wrap(&config, max_lvl); // MAX PWM value
+    pwm_init(pwm_gpio_to_slice_num(pinN), &config, true);
+}
+
+>>>>>>> master
 extern "C" semaphore_t vga_start_semaphore;
 extern "C" void dvi_on_core1();
 extern "C" void flash_timings();
@@ -399,11 +411,8 @@ extern "C" int testPins(uint32_t pin0, uint32_t pin1) {
 int main() {
 #if !PICO_RP2040
 	vreg_disable_voltage_limit();
-	vreg_set_voltage(VREG_VSEL);
-#else
-    vreg_set_voltage(VREG_VOLTAGE_1_30);
 #endif
-    flash_timings();
+    vreg_set_voltage(VREG_VOLTAGE_1_30);
 
     DBGM_PRINT(("Before keyboard_init"));
     keyboard_init();
