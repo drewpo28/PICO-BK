@@ -34,8 +34,6 @@ extern "C" {
 #include <hardware/dma.h>
 #include "audio_i2s.pio.h"
 
-void audio_init(void);
-
 typedef struct i2s_config 
 {
     uint32_t sample_freq;        
@@ -46,7 +44,7 @@ typedef struct i2s_config
     uint8_t  sm; 
     uint8_t  dma_channel;
     uint16_t dma_trans_count;
-    uint16_t *dma_buf;
+    uint32_t *dma_buf;      /* buffer holds dma_trans_count x uint32 stereo frames */
     uint8_t volume;
 } i2s_config_t;
 
@@ -58,6 +56,17 @@ void i2s_dma_write(i2s_config_t *i2s_config,const int16_t *samples);
 void i2s_volume(i2s_config_t *i2s_config,uint8_t volume);
 void i2s_increase_volume(i2s_config_t *i2s_config);
 void i2s_decrease_volume(i2s_config_t *i2s_config);
+
+void audio_init(void);
+
+/**
+ * Submit one stereo frame to the I2S DAC via DMA.
+ * Only available when I2S is defined. Safe to call from a repeating timer ISR
+ * because i2s_dma_write() waits for the previous transfer before starting the next.
+ */
+#ifdef I2S
+void audio_i2s_submit(int16_t l, int16_t r);
+#endif
 
 #ifdef __cplusplus
 }

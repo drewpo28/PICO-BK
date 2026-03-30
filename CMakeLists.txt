@@ -17,15 +17,16 @@ set(PICO_BOARD pico2 CACHE STRING "Board type")
 cmake_minimum_required(VERSION 3.22)
 set(PICO_CXX_ENABLE_EXCEPTIONS 1)
 
-option(AY_TYPE "AY-3-8910 Type: PWM / HWAY" HWAY)
+option(AY_TYPE "AY-3-8910 Type: PWM / I2S / HWAY" PWM)
 option(MURM2 "Murmulator 2.0" OFF)
 option(PICO_PC "RP2040-PICO-PC" OFF)
 option(ZERO2 "RP2350-PiZero" OFF)
 option(ZERO "RP2040-PiZero" OFF)
 
-set(BUILD_VERSION "1.4.6")
+set(BUILD_VERSION "1.4.7")
 set(USE_NESPAD ON)
 
+set(AY_TYPE I2S)
 #set(AY_TYPE HWAY)
 #set (m1p2launcher ON)
 
@@ -175,6 +176,9 @@ endif ()
 
 if( AY_TYPE MATCHES "HWAY" )
     target_compile_definitions(${PROJECT_NAME} PRIVATE HWAY)
+endif()
+if( AY_TYPE MATCHES "I2S" )
+    target_compile_definitions(${PROJECT_NAME} PRIVATE I2S=1)
 endif()
 
 if (USE_WII)

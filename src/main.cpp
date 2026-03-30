@@ -54,19 +54,6 @@ uint8_t __aligned(4) TEXT_VIDEO_RAM[128*48*2] = { 0 };
 uint8_t __aligned(4) TEXT_VIDEO_RAM[128*96*2] = { 0 };
 #endif
 
-<<<<<<< HEAD
-#define VREG_VSEL VREG_VOLTAGE_1_60
-=======
-pwm_config config = pwm_get_default_config();
-
-void PWM_init_pin(uint8_t pinN, uint16_t max_lvl) {
-    gpio_set_function(pinN, GPIO_FUNC_PWM);
-    pwm_config_set_clkdiv(&config, 1.0);
-    pwm_config_set_wrap(&config, max_lvl); // MAX PWM value
-    pwm_init(pwm_gpio_to_slice_num(pinN), &config, true);
-}
-
->>>>>>> master
 extern "C" semaphore_t vga_start_semaphore;
 extern "C" void dvi_on_core1();
 extern "C" void flash_timings();
@@ -139,6 +126,8 @@ static bool __not_in_flash_func(AY_timer_callback)(repeating_timer_t *rt) {
 		send_to_595(LOW (BDIR) | val);
     }
 #endif
+#elif defined(I2S)
+    /* I2S output — sent further below after mixing, see audio_i2s_submit() call */
 #else
     pwm_set_gpio_level(PWM_PIN0, outR); // Право
     pwm_set_gpio_level(PWM_PIN1, outL); // Лево
@@ -190,10 +179,25 @@ static bool __not_in_flash_func(AY_timer_callback)(repeating_timer_t *rt) {
         // then the same volume shift applies via outL/outR already being scaled.
         // Use (1 << (snd_volume + 7)) as beep_add — tracks volume identically to PWM.
         uint16_t beep_add = beeper_on ? (uint16_t)(1u << (g_conf.snd_volume + 7)) : 0u;
-        push_audio_sample((int16_t)((int32_t)(outL + beep_add) * 6),
-                          (int16_t)((int32_t)(outR + beep_add) * 6));
+        int16_t sampleL = (int16_t)((int32_t)(outL + beep_add) * 6);
+        int16_t sampleR = (int16_t)((int32_t)(outR + beep_add) * 6);
+        // HDMI/DVI carries audio regardless of the physical output backend
+        push_audio_sample(sampleL, sampleR);
+#if defined(I2S)
+        // I2S DAC output — parallel to HDMI, same mixed samples
+        audio_i2s_submit(sampleL, sampleR);
+#endif
         }
     }
+#if defined(I2S)
+    else {
+        // VGA mode: no HDMI audio ring, but I2S DAC still needs samples
+        uint16_t beep_add = beeper_on ? (uint16_t)(1u << (g_conf.snd_volume + 7)) : 0u;
+        int16_t sampleL = (int16_t)((int32_t)(outL + beep_add) * 6);
+        int16_t sampleR = (int16_t)((int32_t)(outR + beep_add) * 6);
+        audio_i2s_submit(sampleL, sampleR);
+    }
+#endif
     return true;
 }
 #endif
@@ -416,7 +420,6 @@ int main() {
 
     DBGM_PRINT(("Before keyboard_init"));
     keyboard_init();
-    audio_init();
 
 #if LOAD_WAV_PIO
     //пин ввода звука
@@ -447,6 +450,7 @@ int main() {
     }
 
     init_fs();
+    audio_init();
 #if defined(ZERO2) || defined(ZERO)
     SELECT_VGA = 0;
 #else

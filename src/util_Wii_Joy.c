@@ -32,6 +32,7 @@ const uint8_t set_lores_cmd[2]={0xFE,0x01};
 //const uint8_t init_data[] = { 0xF0, 0x55, 0xFB, 0x00, 0xFE, 0x03 };
 
 #ifdef MNGR_DEBUG
+#include "debug.h"
 #define printf(...) { char tmp[80]; snprintf(tmp, 80, __VA_ARGS__); logMsg(tmp); }
 #else
 #define printf(...) {}
