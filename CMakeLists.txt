@@ -12,7 +12,7 @@ if (EXISTS ${picoVscode})
     include(${picoVscode})
 endif()
 # ====================================================================================
-set(PICO_BOARD pico CACHE STRING "Board type")
+set(PICO_BOARD pico2 CACHE STRING "Board type")
 
 cmake_minimum_required(VERSION 3.22)
 set(PICO_CXX_ENABLE_EXCEPTIONS 1)
@@ -23,14 +23,14 @@ option(PICO_PC "RP2040-PICO-PC" OFF)
 option(ZERO2 "RP2350-PiZero" OFF)
 option(ZERO "RP2040-PiZero" OFF)
 
-set(BUILD_VERSION "1.4.5")
+set(BUILD_VERSION "1.4.6")
 set(USE_NESPAD ON)
 
 #set(AY_TYPE HWAY)
 #set (m1p2launcher ON)
 
 # Platform (m1p2 by default)
-#set (MURM2 ON)
+set (MURM2 ON)
 #set (PICO_PC ON)
 #set (ZERO ON)
 #set (ZERO2 ON)
@@ -89,6 +89,7 @@ add_subdirectory(drivers/sdcard)
 add_subdirectory(drivers/psram)
 add_subdirectory(drivers/nespad)
 add_subdirectory(drivers/usb)
+add_subdirectory(drivers/audio)
 
 # INCLUDE FILES THAT SHOULD BE COMPILED:
 
@@ -123,6 +124,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
         fatfs
         nespad
         usb
+        audio
 
         pico_runtime
         pico_stdlib
@@ -222,6 +224,10 @@ if (MURM2)
         PWM_PIN0=10
         PWM_PIN1=11
 
+        I2S_DATA_PIO=9 #
+        I2S_BCK_PIO=10 #
+        I2S_LCK_PIO=11
+
         beginVGA_PIN=12
         DVI_DEFAULT_SERIAL_CONFIG=murmulator2_cfg
 
@@ -255,6 +261,10 @@ elseif (PICO_PC)
         PWM_PIN0=27
         PWM_PIN1=28
 
+        I2S_DATA_PIO=26 # not implemented
+        I2S_BCK_PIO=26  # I2S_BCK_PIO == I2S_LCK_PIO == I2S_DATA_PIO - unsupported mark
+        I2S_LCK_PIO=26
+
         beginVGA_PIN=12
         DVI_DEFAULT_SERIAL_CONFIG=Olimex_RP2040_PICO_PC_cfg
 
@@ -286,6 +296,10 @@ elseif (ZERO)
         PWM_PIN0=10
         PWM_PIN1=11
         BEEPER_PIN=3
+
+        I2S_DATA_PIO=10 #
+        I2S_BCK_PIO=11 #
+        I2S_LCK_PIO=12
 
         beginVGA_PIN=22
         DVI_DEFAULT_SERIAL_CONFIG=waveshare_rp2040_pizero_hdmi_cfg
@@ -320,6 +334,10 @@ elseif (ZERO2)
         PWM_PIN0=10
         PWM_PIN1=11
         BEEPER_PIN=12
+
+        I2S_DATA_PIO=10 #
+        I2S_BCK_PIO=11 #
+        I2S_LCK_PIO=12
 
         beginVGA_PIN=32
         DVI_DEFAULT_SERIAL_CONFIG=waveshare_rp2350_pizero_hdmi_cfg
@@ -360,6 +378,11 @@ else() # m1
         PWM_PIN0=26
         PWM_PIN1=27
         BEEPER_PIN=28
+
+        I2S_DATA_PIO=26 #
+        I2S_BCK_PIO=27 #
+        I2S_LCK_PIO=28
+
         PICO_DEFAULT_LED_PIN=25
     )
 endif()

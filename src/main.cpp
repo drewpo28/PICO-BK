@@ -10,13 +10,11 @@ extern "C" {
 #include <pico/sem.h>
 #include <pico/multicore.h>
 #include <pico.h>
-#include <hardware/clocks.h>
-#include <hardware/pwm.h>
 #include <pico/stdlib.h>
 #include <hardware/vreg.h>
 #include <pico/stdio.h>
 
-#include "psram_spi.h"
+#include "audio.h"
 
 extern "C" {
 #include "nespad.h"
@@ -55,15 +53,6 @@ uint8_t __aligned(4) TEXT_VIDEO_RAM[128*48*2] = { 0 };
 #else
 uint8_t __aligned(4) TEXT_VIDEO_RAM[128*96*2] = { 0 };
 #endif
-
-pwm_config config = pwm_get_default_config();
-
-void PWM_init_pin(uint8_t pinN, uint16_t max_lvl) {
-    gpio_set_function(pinN, GPIO_FUNC_PWM);
-    pwm_config_set_clkdiv(&config, 1.0);
-    pwm_config_set_wrap(&config, max_lvl); // MAX PWM value
-    pwm_init(pwm_gpio_to_slice_num(pinN), &config, true);
-}
 
 #define VREG_VSEL VREG_VOLTAGE_1_60
 extern "C" semaphore_t vga_start_semaphore;
@@ -291,7 +280,7 @@ static int test_1111_case(uint32_t pin0, uint32_t pin1, int res) {
     return res;
 }
 
-static int testPins(uint32_t pin0, uint32_t pin1) {
+extern "C" int testPins(uint32_t pin0, uint32_t pin1) {
     int res = 0b000000;
     /// do not try to test butter psram this way
 #ifdef BUTTER_PSRAM_GPIO
@@ -418,15 +407,7 @@ int main() {
 
     DBGM_PRINT(("Before keyboard_init"));
     keyboard_init();
-#ifdef HWAY
-    Init_PWM_175(TSPIN_MODE_BOTH);
-#else
-    PWM_init_pin(BEEPER_PIN, (1 << 12) - 1);
-    #ifdef SOUND_SYSTEM
-    PWM_init_pin(PWM_PIN0, (1 << 12) - 1);
-    PWM_init_pin(PWM_PIN1, (1 << 12) - 1);
-    #endif
-#endif
+    audio_init();
 
 #if LOAD_WAV_PIO
     //пин ввода звука

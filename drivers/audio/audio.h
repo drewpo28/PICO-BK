@@ -34,6 +34,8 @@ extern "C" {
 #include <hardware/dma.h>
 #include "audio_i2s.pio.h"
 
+void audio_init(void);
+
 typedef struct i2s_config 
 {
     uint32_t sample_freq;        

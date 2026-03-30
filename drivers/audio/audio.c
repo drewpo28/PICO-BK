@@ -25,10 +25,50 @@
 
 #include "audio.h"
 
-#ifdef AUDIO_PWM_PIN
-#include "hardware/pwm.h"
-#include "hardware/clocks.h"
+uint8_t link_i2s_code = 0xFF;
+bool is_i2s_enabled = false;
+
+#include <pico.h>
+#include <hardware/pwm.h>
+#include <hardware/clocks.h>
+
+int testPins(uint32_t pin0, uint32_t pin1);
+
+#ifdef HWAY
+    #include "PinSerialData_595.h"
 #endif
+
+void PWM_init_pin(uint8_t pinN, uint16_t max_lvl) {
+    pwm_config config = pwm_get_default_config();
+    gpio_set_function(pinN, GPIO_FUNC_PWM);
+    pwm_config_set_clkdiv(&config, 1.0);
+    pwm_config_set_wrap(&config, max_lvl); // MAX PWM value
+    pwm_init(pwm_gpio_to_slice_num(pinN), &config, true);
+}
+
+void audio_init(void) {
+#ifdef HWAY
+    Init_PWM_175(TSPIN_MODE_BOTH);
+#else
+    if (link_i2s_code == 0xFF) {
+        if (I2S_BCK_PIO != I2S_LCK_PIO && I2S_LCK_PIO != I2S_DATA_PIO && I2S_BCK_PIO != I2S_DATA_PIO) {
+            link_i2s_code = testPins(I2S_DATA_PIO, I2S_BCK_PIO);
+            is_i2s_enabled = link_i2s_code;
+        }
+    }
+    if (is_i2s_enabled) {
+        #ifdef SOUND_SYSTEM
+
+        #endif
+    } else {
+        PWM_init_pin(BEEPER_PIN, (1 << 12) - 1);
+        #ifdef SOUND_SYSTEM
+        PWM_init_pin(PWM_PIN0, (1 << 12) - 1);
+        PWM_init_pin(PWM_PIN1, (1 << 12) - 1);
+        #endif
+    }
+#endif
+}
 
 /**
  * return the default i2s context used to store information about the setup
